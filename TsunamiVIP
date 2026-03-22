@@ -1,1 +1,160 @@
+local player = game.Players.LocalPlayer
+local runService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 
+-- GLOBAL DURUM
+_G.autoPartActive = _G.autoPartActive or false
+_G.flyActive = _G.flyActive or false
+_G.noclipActive = _G.noclipActive or false
+
+-- SCREENGUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "VIPGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui") -- kesin PlayerGui
+
+-- ANA FRAME (BÜYÜK FRAME)
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 300, 0, 250)
+frame.Position = UDim2.new(0.5, -150, 0.4, -125)
+frame.BackgroundColor3 = Color3.fromRGB(40, 0, 60)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+-- VIP TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.Text = "VIP Üyelik"
+title.TextColor3 = Color3.fromRGB(255, 215, 0)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+-- EK YAZI (GELİŞME SÜRECİNDE)
+local subTitle = Instance.new("TextLabel")
+subTitle.Size = UDim2.new(0, 180, 0, 20)
+subTitle.Position = UDim2.new(0, 10, 0, 40)
+subTitle.Text = "(gelişme sürecinde)"
+subTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+subTitle.BackgroundTransparency = 1
+subTitle.TextScaled = true
+subTitle.TextXAlignment = Enum.TextXAlignment.Left
+subTitle.Parent = frame
+
+-- DURUM LABEL
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Position = UDim2.new(0, 0, 1, -30)
+statusLabel.Text = "Durum: Kapalı"
+statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextScaled = true
+statusLabel.Parent = frame
+
+-- BUTON OLUŞTURMA FONKSİYONU
+local function createButton(name, yPos, color)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -20, 0, 50)
+	btn.Position = UDim2.new(0, 10, 0, yPos)
+	btn.Text = name
+	btn.BackgroundColor3 = color
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Parent = frame
+	return btn
+end
+
+local autoButton = createButton("Auto Part", 70, Color3.fromRGB(80,0,120))
+local flyButton = createButton("Fly", 130, Color3.fromRGB(0,80,120))
+local noclipButton = createButton("Noclip", 190, Color3.fromRGB(120,40,0))
+
+-- DURUM GÜNCELLEME
+local function updateStatus()
+	local s = "Durum: "
+	local color = Color3.fromRGB(255,0,0)
+	if _G.autoPartActive or _G.flyActive or _G.noclipActive then
+		s = s.."Aktif"
+		color = Color3.fromRGB(0,255,0)
+	else
+		s = s.."Kapalı"
+	end
+	statusLabel.Text = s
+	statusLabel.TextColor3 = color
+end
+
+-- AUTO PART LOOP
+task.spawn(function()
+	while true do
+		if _G.autoPartActive then
+			local char = player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local part = Instance.new("Part")
+				part.Size = Vector3.new(4,1,4)
+				part.Position = char.HumanoidRootPart.Position - Vector3.new(0,3,0)
+				part.Anchored = true
+				part.Parent = workspace
+				task.delay(1, function() if part then part:Destroy() end)
+			end
+		end
+		task.wait(0.2)
+	end
+end)
+
+-- FLY LOGIC
+local flySpeed = 50
+local flyDir = Vector3.new(0,0,0)
+runService.RenderStepped:Connect(function()
+	if _G.flyActive then
+		local char = player.Character
+		if char and char:FindFirstChild("HumanoidRootPart") then
+			char.HumanoidRootPart.Velocity = flyDir * flySpeed
+		end
+	end
+end)
+
+UIS.InputBegan:Connect(function(input)
+	if _G.flyActive and input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode.W then flyDir = Vector3.new(0,0,-1) end
+		if input.KeyCode == Enum.KeyCode.S then flyDir = Vector3.new(0,0,1) end
+		if input.KeyCode == Enum.KeyCode.A then flyDir = Vector3.new(-1,0,0) end
+		if input.KeyCode == Enum.KeyCode.D then flyDir = Vector3.new(1,0,0) end
+		if input.KeyCode == Enum.KeyCode.Space then flyDir = Vector3.new(0,1,0) end
+		if input.KeyCode == Enum.KeyCode.LeftShift then flyDir = Vector3.new(0,-1,0) end
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		flyDir = Vector3.new(0,0,0)
+	end
+end)
+
+-- NOCLIP LOGIC
+runService.Stepped:Connect(function()
+	local char = player.Character
+	if char then
+		for _, part in pairs(char:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = not _G.noclipActive
+			end
+		end
+	end
+end)
+
+-- BUTON TOGGLE
+autoButton.MouseButton1Click:Connect(function()
+	_G.autoPartActive = not _G.autoPartActive
+	updateStatus()
+end)
+flyButton.MouseButton1Click:Connect(function()
+	_G.flyActive = not _G.flyActive
+	updateStatus()
+end)
+noclipButton.MouseButton1Click:Connect(function()
+	_G.noclipActive = not _G.noclipActive
+	updateStatus()
+end)
