@@ -15,7 +15,7 @@ local function startScript()
 	local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 	gui.ResetOnSpawn = false
 
-	
+	-- ================= STYLE =================
 	local function styleFrame(f)
 		f.BackgroundColor3 = Color3.fromRGB(20,20,20)
 		Instance.new("UICorner", f).CornerRadius = UDim.new(0,12)
@@ -55,18 +55,18 @@ local function startScript()
 		return b
 	end
 
-	
+	-- ================= UI =================
 	local main = Instance.new("Frame", gui)
 	main.Size = UDim2.new(0,260,0,300)
 	main.Position = UDim2.new(0.5,-130,0.4,-150)
-	setupFrame(main,"(FPS)Flick")
+	setupFrame(main,"[FPS]Flick")
 
-	local floatBtn = btn(main,"Graviy",40)
+	local floatBtn = btn(main,"Gravity",40)
 	local espBtn = btn(main,"ESP",100)
 	local speedBtn = btn(main,"Speed",160)
 	local aimBtn = btn(main,"Aim",220)
 
-	
+	-- ================= FLOAT =================
 	local bodyVel
 	floatBtn.MouseButton1Click:Connect(function()
 		_G.floatActive = not _G.floatActive
@@ -86,7 +86,7 @@ local function startScript()
 		end
 	end)
 
-	
+	-- ================= SPEED =================
 	RunService.Heartbeat:Connect(function()
 		local char = player.Character
 		if not char then return end
@@ -95,18 +95,30 @@ local function startScript()
 		if not hum then return end
 
 		if hum.MoveDirection.Magnitude > 0 then
-			local target = math.clamp(_G.speed,20,240)
+			local target = math.clamp(_G.speed,16,240)
 			hum.WalkSpeed = hum.WalkSpeed + (target - hum.WalkSpeed)*0.1
 		else
-			hum.WalkSpeed = 20
+			hum.WalkSpeed = 16
 		end
 	end)
 
 	speedBtn.MouseButton1Click:Connect(function()
-		_G.speed = (_G.speed == 20) and 25 or 20
+		_G.speed = (_G.speed == 16) and 28 or 16
 	end)
 
-	
+	-- ================= BAKIYOR MU =================
+	local function isLookingAtMe(enemyHead)
+		local myChar = player.Character
+		if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return false end
+
+		local myPos = myChar.HumanoidRootPart.Position
+		local dir = (myPos - enemyHead.Position).Unit
+		local look = enemyHead.CFrame.LookVector
+
+		return dir:Dot(look) > 0.10
+	end
+
+	-- ================= HUD =================
 	local visuals = {}
 
 	local function add(p)
@@ -123,14 +135,23 @@ local function startScript()
 		txt.TextScaled = true
 		txt.TextStrokeTransparency = 0
 
+		local warn = Instance.new("TextLabel", bill)
+		warn.Size = UDim2.new(1,0,0.5,0)
+		warn.Position = UDim2.new(0,0,0.5,0)
+		warn.BackgroundTransparency = 1
+		warn.Text = "⚠ BAKIYOR"
+		warn.TextScaled = true
+		warn.TextColor3 = Color3.fromRGB(255,0,0)
+		warn.Visible = false
+
 		local bg = Instance.new("Frame", bill)
 		bg.Size = UDim2.new(1,0,0.2,0)
-		bg.Position = UDim2.new(0,0,0.6,0)
+		bg.Position = UDim2.new(0,0,0.8,0)
 
 		local hp = Instance.new("Frame", bg)
 		hp.BackgroundColor3 = Color3.fromRGB(0,255,0)
 
-		visuals[p] = {bill=bill,txt=txt,hp=hp}
+		visuals[p] = {bill=bill,txt=txt,hp=hp,warn=warn}
 	end
 
 	for _,p in pairs(Players:GetPlayers()) do add(p) end
@@ -150,6 +171,18 @@ local function startScript()
 					v.bill.Adornee = head
 
 					local dist = math.floor((head.Position-camera.CFrame.Position).Magnitude)
+					
+					local looking = isLookingAtMe(head)
+
+					-- 🔴 BAKIYORSA
+					if looking then
+						v.txt.TextColor3 = Color3.fromRGB(255,0,0)
+						v.warn.Visible = true
+					else
+						v.txt.TextColor3 = Color3.fromRGB(255,255,255)
+						v.warn.Visible = false
+					end
+
 					v.txt.Text = plr.Name.." | "..dist.."m"
 
 					local p = hum and hum.Health/hum.MaxHealth or 1
@@ -167,7 +200,7 @@ local function startScript()
 		_G.espActive = not _G.espActive
 	end)
 
-	
+	-- ================= AIM =================
 	local function isVisible(part)
 		local origin = camera.CFrame.Position
 		local direction = (part.Position - origin)
@@ -185,7 +218,6 @@ local function startScript()
 		return true
 	end
 
-	
 	aimBtn.MouseButton1Click:Connect(function()
 		aimActive = not aimActive
 		if not aimActive then lockedTarget = nil end
@@ -233,7 +265,7 @@ local function startScript()
 	end)
 end
 
--- KEY
+-- ================= KEY =================
 local key = "akbar201212"
 
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
