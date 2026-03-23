@@ -61,7 +61,7 @@ local function startScript()
 	main.Position = UDim2.new(0.5,-130,0.4,-150)
 	setupFrame(main,"(FPS)Flick")
 
-	local floatBtn = btn(main,"Gravity",40)
+	local floatBtn = btn(main,"Graviy",40)
 	local espBtn = btn(main,"ESP",100)
 	local speedBtn = btn(main,"Speed",160)
 	local aimBtn = btn(main,"Aim",220)
