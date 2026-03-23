@@ -95,15 +95,15 @@ local function startScript()
 		if not hum then return end
 
 		if hum.MoveDirection.Magnitude > 0 then
-			local target = math.clamp(_G.speed,16,240)
+			local target = math.clamp(_G.speed,20,240)
 			hum.WalkSpeed = hum.WalkSpeed + (target - hum.WalkSpeed)*0.1
 		else
-			hum.WalkSpeed = 16
+			hum.WalkSpeed = 20
 		end
 	end)
 
 	speedBtn.MouseButton1Click:Connect(function()
-		_G.speed = (_G.speed == 16) and 30 or 16
+		_G.speed = (_G.speed == 20) and 25 or 20
 	end)
 
 	
